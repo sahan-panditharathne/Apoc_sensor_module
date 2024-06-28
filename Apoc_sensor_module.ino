@@ -29,6 +29,7 @@ float soil = 0;
 float battery = 0;
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SOIL_PWR, OUTPUT);
   
   #if DEBUG
@@ -36,36 +37,82 @@ void setup() {
   Serial.println("Starting");
   #endif
 
-  initializeSensors();
-  if (!initLoRa()) {
-    #if DEBUG
-    Serial.println("LoRa initialization failed. Retrying...");
-    #endif
-    delay(1000);
-    setup();
+  while (!initializeSensors()) {
+    indicateError();
+    delay(1000);  // Wait 1 seconds before retrying
   }
+
+  while (!initLoRa()) {
+    indicateError();
+    delay(1000);  // Wait 1 seconds before retrying
+  }
+
+  // If we've reached here, everything is initialized properly
+  digitalWrite(LED_BUILTIN, LOW);  // Turn off LED to indicate successful initialization
 }
 
-void initializeSensors() {
-  dht.begin();
-  Wire.begin();
-  lightMeter.begin(BH1750::ONE_TIME_HIGH_RES_MODE);
+bool initializeSensors() {
+  #if DEBUG
+  Serial.println("Initializing sensors...");
+  #endif
 
+  // Initialize DHT sensor
+  dht.begin();
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
   delayMS = sensor.min_delay / 1000;
 
+  // Check if DHT sensor is responding
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature)) {
+    #if DEBUG
+    Serial.println("Failed to initialize DHT sensor!");
+    #endif
+    return false;
+  }
+
+  // Initialize I2C and BH1750 light sensor
+  Wire.begin();
+  if (!lightMeter.begin(BH1750::ONE_TIME_HIGH_RES_MODE)) {
+    #if DEBUG
+    Serial.println("Failed to initialize BH1750 sensor!");
+    #endif
+    return false;
+  }
+
   #if DEBUG
-  Serial.println(F("Sensors initialized"));
+  Serial.println("All sensors initialized successfully");
   #endif
+  return true;
 }
 
 bool initLoRa() {
+  #if DEBUG
+  Serial.println("Initializing LoRa...");
+  #endif
+
   if (!LoRa.begin(LORA_FREQUENCY)) {
+    #if DEBUG
+    Serial.println("LoRa initialization failed!");
+    #endif
     return false;
   }
+
   // LoRa.setTxPower(12);
+  #if DEBUG
+  Serial.println("LoRa initialized successfully");
+  #endif
   return true;
+}
+
+void indicateError() {
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(100);
+  }
 }
 
 void loop() {
@@ -171,7 +218,9 @@ void transmitData() {
 
 String formatMessage() {
   float checksum = temperature + humidity + lux + soil;
-  return String(ID) + "," + String(battery, 2) + "," + String(checksum, 2) + "," +String(temperature, 2) + "," + String(humidity, 2) + "," + String(lux, 2) + "," + String(soil, 2);
+  return String(ID) + "," + String(battery, 2) + "," + String(checksum, 2) + "," +
+         String(temperature, 2) + "," + String(humidity, 2) + "," + 
+         String(lux, 2) + "," + String(soil, 2);
 }
 
 bool sendLoRaMessage(String message) {
@@ -183,6 +232,7 @@ bool sendLoRaMessage(String message) {
 void sleep() {
   LoRa.end();
   digitalWrite(SOIL_PWR, LOW);
+  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off during sleep
   #if DEBUG
   Serial.println("Entering sleep mode");
   Serial.flush();
