@@ -7,6 +7,7 @@
 #include <LoRa.h>
 
 #define DEBUG 1
+#define NETWORK_ID "ALPHA1"
 #define ID "0002"
 #define DHTPIN 8
 #define SOIL_DATA A0
@@ -217,10 +218,39 @@ void transmitData() {
 }
 
 String formatMessage() {
-  float checksum = temperature + humidity + lux + soil;
-  return String(ID) + "," + String(battery, 2) + "," + String(checksum, 2) + "," +
-         String(temperature, 2) + "," + String(humidity, 2) + "," + 
-         String(lux, 2) + "," + String(soil, 2);
+  static uint32_t sequence = 0;
+  char buffer[150];  // Buffer for the main message parts
+  
+  // Format each data cluster
+  char nodeInfo[50];
+  snprintf(nodeInfo, sizeof(nodeInfo), "%s:%lu:%lu", ID, sequence++, millis());
+  
+  char envData[50];
+  snprintf(envData, sizeof(envData), "%.2f;%.2f;%.2f;%.2f", temperature, humidity, lux, soil);
+  
+  char powerData[20];
+  snprintf(powerData, sizeof(powerData), "%.2f", battery);
+  
+  // Combine all parts into the final message
+  snprintf(buffer, sizeof(buffer), 
+           "%s@ENVSENSOR@%s@%s@%s@",
+           NETWORK_ID, nodeInfo, envData, powerData);
+  
+  String message = "##" + String(buffer);
+  uint16_t checksumValue = calculateChecksum(message.c_str(), message.length());
+  
+  message += String(checksumValue, HEX);
+  message += "$$";
+  
+  return message;
+}
+
+uint16_t calculateChecksum(const char* data, size_t length) {
+  uint16_t checksum = 0;
+  for (size_t i = 0; i < length; i++) {
+    checksum += (uint8_t)data[i];
+  }
+  return checksum;
 }
 
 bool sendLoRaMessage(String message) {
