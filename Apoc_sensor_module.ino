@@ -14,7 +14,7 @@
 #define SOIL_PWR 7
 #define BATTERY A1
 #define DHTTYPE DHT11
-#define SAMPLE_COUNT 5
+#define SAMPLE_COUNT 3
 #define SLEEP_CYCLES 113
 #define VREF 3.3
 #define LORA_FREQUENCY 433E6
@@ -220,16 +220,29 @@ void transmitData() {
 String formatMessage() {
   static uint32_t sequence = 0;
   char buffer[150];  // Buffer for the main message parts
+
+  char temperatureStr[10];
+  char humidityStr[10];
+  char luxStr[10];
+  char soilStr[10];
+  char batteryStr[10];
+
+  // Convert floats to strings
+  dtostrf(temperature, sizeof(temperature), 2, temperatureStr);
+  dtostrf(humidity, sizeof(humidity), 2, humidityStr);
+  dtostrf(lux, sizeof(lux), 2, luxStr);
+  dtostrf(soil, sizeof(soil), 2, soilStr);
+  dtostrf(battery, sizeof(battery), 2, batteryStr);
   
   // Format each data cluster
   char nodeInfo[50];
   snprintf(nodeInfo, sizeof(nodeInfo), "%s:%lu:%lu", ID, sequence++, millis());
   
-  char envData[50];
-  snprintf(envData, sizeof(envData), "%.2f;%.2f;%.2f;%.2f", temperature, humidity, lux, soil);
-  
+  char envData[20];
+  snprintf(envData, sizeof(envData), "%s;%s;%s;%s", temperatureStr, humidityStr, luxStr, soilStr);
+ 
   char powerData[20];
-  snprintf(powerData, sizeof(powerData), "%.2f", battery);
+  snprintf(powerData, sizeof(powerData), "%s", batteryStr);
   
   // Combine all parts into the final message
   snprintf(buffer, sizeof(buffer), 
