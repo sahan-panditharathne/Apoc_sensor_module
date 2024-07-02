@@ -15,11 +15,11 @@ This project implements an environmental sensor node using Arduino, various sens
 
 ## Hardware Requirements
 
-- Arduino board (compatible with used libraries)
+- Arduino board (Arduino Pro Mini 3.3V 8MHz)
 - DHT11 temperature and humidity sensor
 - BH1750 light sensor
 - Soil moisture sensor
-- LoRa module (e.g., RFM95)
+- LoRa module (e.g., Ra-02)
 - Battery for power supply
 
 ## Software Dependencies
@@ -79,6 +79,18 @@ To parse this message:
 3. Split the fourth part by `;` to get environmental sensor readings
 4. The fifth part contains the battery voltage
 5. Everything between `##` and `$$` should be used to verify the checksum
+
+## ⚠️ IMPORTANT: Network ID Configuration ⚠️
+
+The Network ID is a crucial parameter that MUST be customized for your specific implementation. It serves as a filter for the receiver device to process only messages from sensors within its group.
+
+- You MUST change the `NETWORK_ID` in the code to a unique, short identifier for your sensor network.
+- Keep the Network ID as short as possible (e.g., "A1", "B2") to minimize transmission length.
+- Ensure all sensors in your network and the corresponding receiver use the same Network ID.
+
+Failure to change the Network ID may result in:
+1. Interference with other sensor networks
+2. Inability to properly filter and process your sensor data
 
 ## Setup and Installation
 
