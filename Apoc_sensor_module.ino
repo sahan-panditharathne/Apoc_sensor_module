@@ -12,7 +12,7 @@
 #define DHTPIN 8
 #define SOIL_DATA A0
 #define SOIL_PWR 7
-#define BATTERY A1
+#define BATTERY A1 
 #define DHTTYPE DHT11
 #define SAMPLE_COUNT 3
 #define SLEEP_CYCLES 113
