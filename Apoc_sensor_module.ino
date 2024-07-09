@@ -6,18 +6,18 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-#define DEBUG 1
-#define NETWORK_ID "ALPHA1"
-#define ID "0002"
-#define DHTPIN 8
-#define SOIL_DATA A0
-#define SOIL_PWR 7
-#define BATTERY A1 
-#define DHTTYPE DHT11
-#define SAMPLE_COUNT 3
-#define SLEEP_CYCLES 113
-#define VREF 3.3
-#define LORA_FREQUENCY 433E6
+#define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
+#define NETWORK_ID "ALPHA1" // Network identifier for the sensor group - MUST BE CHANGED BY USER
+#define ID "0002" // Unique identifier for this specific sensor node
+#define DHTPIN 8 // Digital pin connected to the DHT sensor
+#define SOIL_DATA A0 // Analog pin for soil moisture sensor data
+#define SOIL_PWR 7 // Digital pin to control power to the soil moisture sensor
+#define BATTERY A1 // Analog pin for battery voltage measurement
+#define DHTTYPE DHT11 // Type of DHT sensor in use
+#define SAMPLE_COUNT 3 // Number of samples to take for each sensor reading
+#define SLEEP_CYCLES 113 // Number of 8-second sleep cycles (113 * 8 seconds ≈ 15 minutes)
+#define VREF 3.3 // Reference voltage for analog readings
+#define LORA_FREQUENCY 433E6 // LoRa radio frequency in Hz (433 MHz in this case)
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;

@@ -40,6 +40,7 @@ Ensure these are installed in your Arduino IDE before compiling the code.
 - Soil moisture sensor data: Pin A0
 - Soil moisture sensor power: Pin 7
 - Battery voltage measurement: Pin A1
+- BH1750 sensor: I2C pins
 - LoRa module: Depends on your specific module, typically uses SPI pins
 
 ## Functionality
