@@ -5,10 +5,10 @@
 #include "LowPower.h"
 #include <SPI.h>
 #include <LoRa.h>
+#include <EEPROM.h>
 
 #define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
 #define NETWORK_ID "ALPHA1" // Network identifier for the sensor group - MUST BE CHANGED BY USER
-#define ID "0002" // Unique identifier for this specific sensor node
 #define DHTPIN 8 // Digital pin connected to the DHT sensor
 #define SOIL_DATA A0 // Analog pin for soil moisture sensor data
 #define SOIL_PWR 7 // Digital pin to control power to the soil moisture sensor
@@ -18,6 +18,7 @@
 #define SLEEP_CYCLES 113 // Number of 8-second sleep cycles (113 * 8 seconds ≈ 15 minutes)
 #define VREF 3.3 // Reference voltage for analog readings
 #define LORA_FREQUENCY 433E6 // LoRa radio frequency in Hz (433 MHz in this case)
+#define EEPROM_ADDR 0 // EEPROM address to store the unique ID
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
@@ -29,23 +30,30 @@ float lux = 0;
 float soil = 0;
 float battery = 0;
 
+String uniqueID;
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SOIL_PWR, OUTPUT);
-  
+
   #if DEBUG
   Serial.begin(115200);
   Serial.println("Starting");
   #endif
 
+  if (!checkAndGenerateID()) {
+    indicateError();
+    while (true);  // Stop execution if ID generation failed
+  }
+
   while (!initializeSensors()) {
     indicateError();
-    delay(1000);  // Wait 1 seconds before retrying
+    delay(1000);  // Wait 1 second before retrying
   }
 
   while (!initLoRa()) {
     indicateError();
-    delay(1000);  // Wait 1 seconds before retrying
+    delay(1000);  // Wait 1 second before retrying
   }
 
   // If we've reached here, everything is initialized properly
@@ -236,7 +244,7 @@ String formatMessage() {
   
   // Format each data cluster
   char nodeInfo[50];
-  snprintf(nodeInfo, sizeof(nodeInfo), "%s:%lu:%lu", ID, sequence++, millis());
+  snprintf(nodeInfo, sizeof(nodeInfo), "%s:%lu:%lu", uniqueID.c_str(), sequence++, millis());
   
   char envData[20];
   snprintf(envData, sizeof(envData), "%s;%s;%s;%s", temperatureStr, humidityStr, luxStr, soilStr);
@@ -283,4 +291,52 @@ void sleep() {
   for (int i = 0; i < SLEEP_CYCLES; i++) {
     LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
   }
+}
+
+bool checkAndGenerateID() {
+  char id[6];  // Buffer to hold the ID
+
+  // Read ID from EEPROM
+  for (int i = 0; i < 5; i++) {
+    id[i] = EEPROM.read(EEPROM_ADDR + i);
+  }
+  id[5] = '\0';  // Null-terminate the string
+
+  // Check if the ID is valid
+  if (isValidID(id)) {
+    uniqueID = String(id);
+    #if DEBUG
+    Serial.println("Existing ID found: " + uniqueID);
+    #endif
+    return true;
+  }
+
+  // Generate a new unique ID
+  for (int i = 0; i < 5; i++) {
+    id[i] = random(0, 10) + '0';
+  }
+  id[5] = '\0';  // Null-terminate the string
+
+  // Save the new ID to EEPROM
+  for (int i = 0; i < 5; i++) {
+    EEPROM.write(EEPROM_ADDR + i, id[i]);
+  }
+  EEPROM.commit();
+
+  uniqueID = String(id);
+  #if DEBUG
+  Serial.println("New ID generated: " + uniqueID);
+  #endif
+
+  return true;
+}
+
+bool isValidID(const char* id) {
+  // Check if the ID consists of 5 digits
+  for (int i = 0; i < 5; i++) {
+    if (!isdigit(id[i])) {
+      return false;
+    }
+  }
+  return true;
 }
