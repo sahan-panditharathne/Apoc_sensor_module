@@ -7,8 +7,9 @@
 #include <LoRa.h>
 #include <EEPROM.h>
 
-#define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
 #define NETWORK_ID "ALPHA1" // Network identifier for the sensor group - MUST BE CHANGED BY USER
+
+#define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
 #define DHTPIN 8 // Digital pin connected to the DHT sensor
 #define SOIL_DATA A0 // Analog pin for soil moisture sensor data
 #define SOIL_PWR 7 // Digital pin to control power to the soil moisture sensor
@@ -19,6 +20,7 @@
 #define VREF 3.3 // Reference voltage for analog readings
 #define LORA_FREQUENCY 433E6 // LoRa radio frequency in Hz (433 MHz in this case)
 #define EEPROM_ADDR 0 // EEPROM address to store the unique ID
+#define TRANSMIT_ATTEMPT 3 //Number of attempts to transmit the message in case of failure
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
@@ -41,11 +43,6 @@ void setup() {
   Serial.println("Starting");
   #endif
 
-  if (!checkAndGenerateID()) {
-    indicateError();
-    while (true);  // Stop execution if ID generation failed
-  }
-
   while (!initializeSensors()) {
     indicateError();
     delay(1000);  // Wait 1 second before retrying
@@ -54,6 +51,11 @@ void setup() {
   while (!initLoRa()) {
     indicateError();
     delay(1000);  // Wait 1 second before retrying
+  }
+
+  if (!checkAndGenerateID()) {
+    indicateError();
+    while (true);  // Stop execution if ID generation failed
   }
 
   // If we've reached here, everything is initialized properly
@@ -211,7 +213,7 @@ void transmitData() {
   Serial.println("Transmitting: " + message);
   #endif
   
-  for (int attempt = 0; attempt < 3; attempt++) {
+  for (int attempt = 0; attempt < TRANSMIT_ATTEMPT; attempt++) {
     if (sendLoRaMessage(message)) {
       #if DEBUG
       Serial.println("Transmission successful");
@@ -321,7 +323,6 @@ bool checkAndGenerateID() {
   for (int i = 0; i < 5; i++) {
     EEPROM.write(EEPROM_ADDR + i, id[i]);
   }
-  EEPROM.commit();
 
   uniqueID = String(id);
   #if DEBUG
