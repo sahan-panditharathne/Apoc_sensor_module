@@ -7,7 +7,7 @@
 #include <LoRa.h>
 #include <EEPROM.h>
 
-#define NETWORK_ID "ALPHA1" // Network identifier for the sensor group - MUST BE CHANGED BY USER
+#define NETWORK_ID "WD" // Network identifier for the sensor group - MUST BE CHANGED BY USER
 
 #define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
 #define DHTPIN 8 // Digital pin connected to the DHT sensor
@@ -229,7 +229,7 @@ void transmitData() {
 
 String formatMessage() {
   static uint32_t sequence = 0;
-  char buffer[150];  // Buffer for the main message parts
+  char buffer[100];  // Buffer for the main message parts
 
   char temperatureStr[10];
   char humidityStr[10];
@@ -245,18 +245,18 @@ String formatMessage() {
   dtostrf(battery, sizeof(battery), 2, batteryStr);
   
   // Format each data cluster
-  char nodeInfo[50];
+  char nodeInfo[30];
   snprintf(nodeInfo, sizeof(nodeInfo), "%s:%lu:%lu", uniqueID.c_str(), sequence++, millis());
   
-  char envData[20];
+  char envData[30];
   snprintf(envData, sizeof(envData), "%s;%s;%s;%s", temperatureStr, humidityStr, luxStr, soilStr);
  
-  char powerData[20];
+  char powerData[6];
   snprintf(powerData, sizeof(powerData), "%s", batteryStr);
   
   // Combine all parts into the final message
   snprintf(buffer, sizeof(buffer), 
-           "%s@ENVSENSOR@%s@%s@%s@",
+           "%s@ENV@%s@%s@%s@",
            NETWORK_ID, nodeInfo, envData, powerData);
   
   String message = "##" + String(buffer);
