@@ -314,17 +314,14 @@ bool checkAndGenerateID() {
   }
 
   // Generate a new unique ID
-  for (int i = 0; i < 5; i++) {
-    id[i] = random(0, 10) + '0';
-  }
-  id[5] = '\0';  // Null-terminate the string
+  int newID = generateRandomID();
 
   // Save the new ID to EEPROM
   for (int i = 0; i < 5; i++) {
-    EEPROM.write(EEPROM_ADDR + i, id[i]);
+    EEPROM.write(EEPROM_ADDR + i, (newID / (int)pow(10, 4 - i)) % 10 + '0');
   }
 
-  uniqueID = String(id);
+  uniqueID = String(newID);
   #if DEBUG
   Serial.println("New ID generated: " + uniqueID);
   #endif
@@ -340,4 +337,24 @@ bool isValidID(const char* id) {
     }
   }
   return true;
+}
+
+int generateRandomID() {
+  // Combine sensor readings to create a unique seed
+  unsigned long seed = (unsigned long)(temperature * 100) + 
+                       (unsigned long)(humidity * 100) + 
+                       (unsigned long)(lux) + 
+                       (unsigned long)(soil * 100) + 
+                       (unsigned long)(battery * 100);
+
+  // Use analog readings for additional randomness
+  seed += analogRead(A2) + analogRead(A3);
+
+  // Initialize the random seed
+  randomSeed(seed);
+
+  // Generate a random 5-digit integer
+  int id = random(10000, 100000);
+
+  return id;
 }
