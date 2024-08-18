@@ -12,10 +12,12 @@ This project implements an environmental sensor node using Arduino, various sens
 7. [Usage](#usage)
 8. [Power Management](#power-management)
 9. [Troubleshooting](#troubleshooting)
+10. [Network ID Configuration](#network-id-configuration)
+11. [Unique ID Generation](#unique-id-generation)
 
 ## Hardware Requirements
 
-- Arduino board (Arduino Pro Mini 3.3V 8MHz)
+- Arduino board (Arduino Pro Mini 3.3V 8MHz recommended)
 - DHT11 temperature and humidity sensor
 - BH1750 light sensor
 - Soil moisture sensor
@@ -31,6 +33,9 @@ This project requires the following libraries:
 - BH1750
 - LowPower
 - LoRa
+- Wire (for I2C communication)
+- SPI
+- EEPROM
 
 Ensure these are installed in your Arduino IDE before compiling the code.
 
@@ -40,26 +45,27 @@ Ensure these are installed in your Arduino IDE before compiling the code.
 - Soil moisture sensor data: Pin A0
 - Soil moisture sensor power: Pin 7
 - Battery voltage measurement: Pin A1
-- BH1750 sensor: I2C pins
-- LoRa module: Depends on your specific module, typically uses SPI pins
+- BH1750 sensor: I2C pins (SDA and SCL)
+- LoRa module: SPI pins
 
 ## Functionality
 
 1. The device initializes all sensors and the LoRa module.
-2. It then enters a loop of:
+2. It generates or retrieves a unique ID for the node.
+3. It then enters a loop of:
    - Waking up and reinitializing LoRa
-   - Reading sensor data
+   - Reading sensor data (with multiple samples for accuracy)
    - Transmitting data via LoRa
    - Entering a low-power sleep mode
 
 ## Message Format
 
 The LoRa message is formatted as follows:
-##NETWORK_ID@ENVSENSOR@NODE_ID:SEQUENCE:TIMESTAMP@TEMP;HUMIDITY;LIGHT;SOIL@BATTERY@CHECKSUM$$
+##NETWORK_ID@ENV@NODE_ID:SEQUENCE:TIMESTAMP@TEMP;HUMIDITY;LIGHT;SOIL@BATTERY@CHECKSUM$$
 
 - `##`: Start delimiter
-- `NETWORK_ID`: Identifier for the network (e.g., "ALPHA1")
-- `ENVSENSOR`: Message type identifier
+- `NETWORK_ID`: Identifier for the network (e.g., "WD")
+- `ENV`: Message type identifier
 - `NODE_ID`: Unique identifier for this sensor node
 - `SEQUENCE`: Message sequence number
 - `TIMESTAMP`: Current timestamp (milliseconds since boot)
@@ -72,33 +78,14 @@ The LoRa message is formatted as follows:
 - `$$`: End delimiter
 
 Example:
-##ALPHA1@ENVSENSOR@0002:10:5000@24.50;53.20;216.33;0.89@3.70@a08$$
-
-To parse this message:
-1. Split the message by `@` characters
-2. Further split the third part (after `ENVSENSOR`) by `:` to get node info
-3. Split the fourth part by `;` to get environmental sensor readings
-4. The fifth part contains the battery voltage
-5. Everything between `##` and `$$` should be used to verify the checksum
-
-## ⚠️ IMPORTANT: Network ID Configuration ⚠️
-
-The Network ID is a crucial parameter that MUST be customized for your specific implementation. It serves as a filter for the receiver device to process only messages from sensors within its group.
-
-- You MUST change the `NETWORK_ID` in the code to a unique, short identifier for your sensor network.
-- Keep the Network ID as short as possible (e.g., "A1", "B2") to minimize transmission length.
-- Ensure all sensors in your network and the corresponding receiver use the same Network ID.
-
-Failure to change the Network ID may result in:
-1. Interference with other sensor networks
-2. Inability to properly filter and process your sensor data
+##WD@ENV@12345:10:5000@24.50;53.20;216.33;0.89@3.70@a08$$
 
 ## Setup and Installation
 
 1. Connect all sensors and the LoRa module to your Arduino board according to the pin configuration.
 2. Install all required libraries in your Arduino IDE.
 3. Copy the provided code into your Arduino IDE.
-4. Adjust any necessary parameters (e.g., `NETWORK_ID`, `ID`, `LORA_FREQUENCY`).
+4. Adjust the `NETWORK_ID` and `LORA_FREQUENCY` as needed.
 5. Upload the code to your Arduino board.
 
 ## Usage
@@ -115,3 +102,21 @@ The device uses low-power sleep modes to conserve energy. It sleeps for approxim
 - Enable `DEBUG` mode for verbose serial output to diagnose issues.
 - Ensure all connections are secure and power supply is adequate.
 - Verify that the LoRa frequency matches your regional regulations.
+
+## Network ID Configuration
+
+The Network ID is a crucial parameter that MUST be customized for your specific implementation. It serves as a filter for the receiver device to process only messages from sensors within its group.
+
+- Change the `NETWORK_ID` in the code to a unique, short identifier for your sensor network.
+- Keep the Network ID as short as possible (e.g., "WD", "A1") to minimize transmission length.
+- Ensure all sensors in your network and the corresponding receiver use the same Network ID.
+
+## Unique ID Generation
+
+The device generates a unique 5-digit ID for each node, which is stored in EEPROM:
+
+- On first run, it generates a random ID based on sensor readings and analog noise.
+- The ID is stored in EEPROM and reused on subsequent boots.
+- This ensures each node has a persistent, unique identifier.
+
+Note: The code provided includes additional features and improvements over the previous version, such as multiple sampling for sensor readings, improved error handling, and retry mechanisms for LoRa transmission.
