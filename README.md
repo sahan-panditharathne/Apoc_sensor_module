@@ -118,5 +118,3 @@ The device generates a unique 5-digit ID for each node, which is stored in EEPRO
 - On first run, it generates a random ID based on sensor readings and analog noise.
 - The ID is stored in EEPROM and reused on subsequent boots.
 - This ensures each node has a persistent, unique identifier.
-
-Note: The code provided includes additional features and improvements over the previous version, such as multiple sampling for sensor readings, improved error handling, and retry mechanisms for LoRa transmission.
