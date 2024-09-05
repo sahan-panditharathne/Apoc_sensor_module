@@ -1,6 +1,14 @@
-# Environmental Sensor Node with LoRa Communication
+# Apocalypes Sensor Module
 
-This project implements an environmental sensor node using Arduino, various sensors, and LoRa communication. The node collects data on temperature, humidity, light intensity, soil moisture, and battery voltage, then transmits this data using LoRa.
+The Apocalypse Sensor Kit is meant for gardening. It's a cheap, DIY suite of hardware and software that you can put together yourself, plant in the ground, and get readings for light intensity, soil moisture, humidity, and temperature. 
+Read the [full documentation](https://github.com/team-watchdog/apocalypse-sensor-kit).
+
+The Apocalypse Sensor Kit consists of three main components:
+1. Sensor Modules: Battery-powered devices that collect environmental data.
+2. Receiver Device: A central hub that receives and stores data from sensor modules.
+2. Mobile Application: For visualizing and analyzing the collected data.
+
+This document is a walk through of the firmware development for the Apocalypse sensor module.
 
 ## Table of Contents
 1. [Hardware Requirements](#hardware-requirements)
