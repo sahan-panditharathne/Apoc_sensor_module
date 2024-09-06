@@ -9,7 +9,7 @@
 
 #define NETWORK_ID "WD" // Network identifier for the sensor group - MUST BE CHANGED BY USER
 
-#define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled)
+#define DEBUG 1 // Enable debug mode for serial output (1 for enabled, 0 for disabled) - serial prints will stop if disabled
 #define DHTPIN 8 // Digital pin connected to the DHT sensor
 #define SOIL_DATA A0 // Analog pin for soil moisture sensor data
 #define SOIL_PWR 7 // Digital pin to control power to the soil moisture sensor
@@ -110,7 +110,6 @@ bool initLoRa() {
     return false;
   }
 
-  // LoRa.setTxPower(12);
   #if DEBUG
   Serial.println("LoRa initialized successfully");
   #endif
