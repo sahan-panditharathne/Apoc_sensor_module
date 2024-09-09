@@ -80,7 +80,7 @@ The LoRa message is formatted as follows:
 - `TEMP`: Temperature reading (°C)
 - `HUMIDITY`: Humidity reading (%)
 - `LIGHT`: Light intensity (lux)
-- `SOIL`: Soil moisture reading (V)
+- `SOIL`: Soil moisture reading (%)
 - `BATTERY`: Battery voltage (V)
 - `CHECKSUM`: Hexadecimal checksum of the message
 - `$$`: End delimiter
@@ -118,6 +118,25 @@ The Network ID is a crucial parameter that MUST be customized for your specific 
 - Change the `NETWORK_ID` in the code to a unique, short identifier for your sensor network.
 - Keep the Network ID as short as possible (e.g., "WD", "A1") to minimize transmission length.
 - Ensure all sensors in your network and the corresponding receiver use the same Network ID.
+- 
+
+## Soil moisture sensor calibration
+
+**Identify Calibration Points:**
+
+- `dryValue`: This represents the analog value output by the sensor when the soil is completely dry. The default dry value is set to 690.
+- `wetValue`: This represents the analog value output when the soil is completely saturated with water. The default wet value is set to 380.
+
+**Collect Calibration Data:**
+
+- Place the soil moisture sensor in a sample of completely dry soil (or leave it exposed to air) and record the analog value. This is the dry value.
+- Submerge the sensor in a sample of water-saturated soil and record the analog value. This is the wet value.
+
+**Adjusting Calibration Values:**
+
+The default calibration values (`dryValue = 690` and `wetValue = 380`) may need to be adjusted depending on,
+- Sensor Variability: Different sensors might have slight variations in their readings.
+- Environmental Conditions: Soil type, salinity, and temperature can affect the sensor's readings.
 
 ## Unique ID Generation
 
