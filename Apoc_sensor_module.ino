@@ -26,6 +26,9 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
 uint32_t delayMS;
 
+int dryValue = 690;
+int wetValue = 380;
+
 float temperature = 0;
 float humidity = 0;
 float lux = 0;
@@ -189,7 +192,10 @@ void readBatterySensor() {
 }
 
 void readSoilSensor() {
-  soil += analogRead(SOIL_DATA) * (VREF / 1023.0);
+  int sensorValue = analogRead(SOIL_DATA);
+  float percent = map(sensorValue,dryValue,wetValue,0,100);
+  percent = constrain(percent, 0, 100);
+  soil += percent;
 }
 
 void readLightSensor() {
